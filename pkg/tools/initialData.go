@@ -36,7 +36,7 @@ func CheckPath(basePath string, blackList []string, src *zk.Conn, dst *zk.Conn) 
 	// 1.获取子节点
 	c, _, err := src.Children(basePath)
 	if err != nil {
-		fmt.Println("配置错误，节点: " + basePath + ", 不存在!!!")
+		fmt.Println("节点: " + basePath + ", 不存在，检测失败！！！")
 		panic(err)
 	}
 
@@ -62,6 +62,8 @@ func CheckPath(basePath string, blackList []string, src *zk.Conn, dst *zk.Conn) 
 
 func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 
+	fmt.Println("节点: " + node + ", 同步开始！！！")
+
 	// 黑名单中的节点不同步
 	for _, v := range blackList {
 
@@ -70,23 +72,21 @@ func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 		if strings.Contains(blackNode, "/*") { // 黑名单，通配符匹配
 			s := (strings.Split(blackNode, "*"))[0]
 			if strings.Contains(node, s) || strings.Contains(node+"/", s) {
-				fmt.Println("节点: " + node + ", 黑名单通配符节点!!!")
+				fmt.Println("节点: " + node + ", 通配黑名单，同步终止！！！")
 				return
 			}
 		} else {
 			if node == blackNode { // 黑名单，普通字符匹配
-				fmt.Println("节点: " + node + ", 黑名单节点!!!")
+				fmt.Println("节点: " + node + ", 普通黑名单，同步终止！！！")
 				return
 			}
 		}
 
 	}
 
-	fmt.Println("节点: " + node + ", 开始同步")
-
 	srcValue, _, err := src.Get(node)
 	if err != nil {
-		fmt.Println("同步失败，源节点: " + node + ", 查询异常!!!")
+		fmt.Println("节点: " + node + ", 源节点查询异常，同步失败！！！")
 
 		panic(err)
 	}
@@ -94,23 +94,23 @@ func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 	dstValue, dstStat, err := dst.Get(node)
 
 	if err != nil { // 插入数据
-		fmt.Println("目标节点: " + node + ", 新增数据")
+		fmt.Println("节点: " + node + ", 新增数据，同步成功！！！")
 		_, err := dst.Create(node, srcValue, 0, zk.WorldACL(zk.PermAll))
 		if err != nil {
-			fmt.Println("目标节点: " + node + ", 新增失败!!!")
+			fmt.Println("节点: " + node + ", 新增数据，同步失败！！！")
 			panic(err)
 		}
-		fmt.Println("目标节点: " + node + ", 新增成功!!!")
+		fmt.Println("节点: " + node + ", 新增数据，同步成功！！！")
 	} else if string(dstValue) != string(srcValue) { // 修改数据
-		fmt.Println("目标节点: " + node + ", 修改数据")
+		fmt.Println("节点: " + node + ", 修改数据，同步失败！！！")
 		_, err = dst.Set(node, srcValue, dstStat.Version)
 		if err != nil {
-			fmt.Println("目标节点: " + node + ", 修改失败!!!")
+			fmt.Println("节点: " + node + ", 修改数据，同步失败！！！")
 			panic(err)
 		}
-		fmt.Println("目标节点: " + node + ", 修改成功!!!")
+		fmt.Println("节点: " + node + ", 修改数据，同步成功！！！")
 	} else {
-		fmt.Println("目标节点: " + node + ", 数据一致!!!")
+		fmt.Println("节点: " + node + ", 数据一致，同步终止！！！")
 	}
 
 }
