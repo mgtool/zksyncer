@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"mgt-zookeeper/pkg/tools"
+	"strconv"
 
 	"github.com/olebedev/config"
 )
@@ -41,6 +43,15 @@ func main() {
 	}
 
 	tools.Start(TransformData(source...), TransformData(destination...), TransformData(whitelist...), TransformData(blacklist...))
+
+	fmt.Println("#########################统计结果#########################")
+	fmt.Println("一致节点：" + strconv.Itoa(tools.SyncedNodes))
+	fmt.Println("创建节点：" + strconv.Itoa(tools.CreateNodes))
+	fmt.Println("创建失败节点：" + strconv.Itoa(tools.CreateFailedNodes))
+	fmt.Println("修改节点：" + strconv.Itoa(tools.ModifyNodes))
+	fmt.Println("修改失败节点：" + strconv.Itoa(tools.ModifyFailedNodes))
+	fmt.Println("黑名单节点：" + strconv.Itoa(tools.BlackNodes))
+	fmt.Println("节点总数：" + strconv.Itoa(tools.TotalNodes))
 
 }
 

@@ -8,6 +8,16 @@ import (
 	"github.com/samuel/go-zookeeper/zk"
 )
 
+var (
+	TotalNodes        = 0
+	BlackNodes        = 0
+	CreateNodes       = 0
+	CreateFailedNodes = 0
+	ModifyNodes       = 0
+	ModifyFailedNodes = 0
+	SyncedNodes       = 0
+)
+
 func Start(srcHosts []string, dstHosts []string, whiteList []string, blackList []string) {
 
 	src, _, err := zk.Connect(srcHosts, time.Second*5)
@@ -62,6 +72,9 @@ func CheckPath(basePath string, blackList []string, src *zk.Conn, dst *zk.Conn) 
 
 func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 
+	TotalNodes++
+
+	fmt.Println("-------------------------------------------------------")
 	fmt.Println("节点: " + node + ", 同步开始！！！")
 
 	// 黑名单中的节点不同步
@@ -73,11 +86,13 @@ func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 			s := (strings.Split(blackNode, "*"))[0]
 			if strings.Contains(node, s) || strings.Contains(node+"/", s) {
 				fmt.Println("节点: " + node + ", 通配黑名单，同步终止！！！")
+				BlackNodes++
 				return
 			}
 		} else {
 			if node == blackNode { // 黑名单，普通字符匹配
 				fmt.Println("节点: " + node + ", 普通黑名单，同步终止！！！")
+				BlackNodes++
 				return
 			}
 		}
@@ -94,22 +109,25 @@ func SyncData(node string, blackList []string, src *zk.Conn, dst *zk.Conn) {
 	dstValue, dstStat, err := dst.Get(node)
 
 	if err != nil { // 插入数据
-		fmt.Println("节点: " + node + ", 新增数据，同步成功！！！")
 		_, err := dst.Create(node, srcValue, 0, zk.WorldACL(zk.PermAll))
 		if err != nil {
 			fmt.Println("节点: " + node + ", 新增数据，同步失败！！！")
+			CreateFailedNodes++
 			panic(err)
 		}
+		CreateNodes++
 		fmt.Println("节点: " + node + ", 新增数据，同步成功！！！")
 	} else if string(dstValue) != string(srcValue) { // 修改数据
-		fmt.Println("节点: " + node + ", 修改数据，同步失败！！！")
 		_, err = dst.Set(node, srcValue, dstStat.Version)
 		if err != nil {
 			fmt.Println("节点: " + node + ", 修改数据，同步失败！！！")
+			ModifyFailedNodes++
 			panic(err)
 		}
+		ModifyNodes++
 		fmt.Println("节点: " + node + ", 修改数据，同步成功！！！")
 	} else {
+		SyncedNodes++
 		fmt.Println("节点: " + node + ", 数据一致，同步终止！！！")
 	}
 
