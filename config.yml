@@ -1,0 +1,13 @@
+zookeeper:
+  server:
+    source: 
+      - x.x.x.x:2181
+    destination: 
+      - y.y.y.y:2181
+  url:
+    whitelist:
+      - /data
+      - /test
+    blacklist:
+      - /zookeeper/*
+      - /data/notsync
