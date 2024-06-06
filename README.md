@@ -1,4 +1,4 @@
-# mgt-zookeeper
+# zksyncer
 
 + 使用说明：
 1. 用户配置通过config.yml文件实现
